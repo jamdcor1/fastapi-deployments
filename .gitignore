@@ -1,21 +1,63 @@
-# Python
+# ----------------------
+# Python cache
+# ----------------------
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.pyd
 
-# Virtual environment
+# Virtual environments
 .venv/
-env/
 venv/
+env/
 
-# Pytest cache
-.pytest_cache/
+# Byte-compiled
+*.pyc
 
-# IDEs
-.vscode/
-.idea/
-
-# Environment files
+# ----------------------
+# Environment / secrets
+# ----------------------
 .env
 .env.*
-*.env
+!*.env.example
+
+# Pydantic settings or config files
+*.sqlite
+*.db
+
+# ----------------------
+# Tool-specific
+# ----------------------
+
+# Ruff cache
+.ruff_cache/
+
+# Pre-commit
+.pre-commit-config.yaml  # <-- KEEP this one in repo
+.pre-commit-hooks.yaml
+# NOTE: Do NOT ignore `.pre-commit-config.yaml`
+# Just leave the cache below ignored
+
+# Pre-commit cache
+.pre-commit/
+
+# Coverage (pytest)
+.coverage
+htmlcov/
+.cache/
+
+# ----------------------
+# Editor / IDE files
+# ----------------------
+.vscode/
+.idea/
+*.swp
+
+# ----------------------
+# Docker / Build Artifacts
+# ----------------------
+*.log
+*.pid
+dist/
+build/
+*.egg-info/
