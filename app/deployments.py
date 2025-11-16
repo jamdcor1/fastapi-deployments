@@ -1,57 +1,61 @@
-from fastapi import APIRouter, HTTPException
-from app.schemas import Deployment, DeploymentCreate, DeploymentUpdate
-from datetime import datetime
+# app/deployments.py
 
-router = APIRouter()
+from typing import Dict, List
 
-# --- In-memory store ---
-deployments = {}
-next_id = 1
+from . import schemas
+from .exceptions import DeploymentNotFoundError
 
-
-@router.get("/", response_model=list[Deployment])
-def list_deployments():
-    return list(deployments.values())
+# Simple in-memory store for Phase 0 / Phase 1
+_deployments: Dict[int, schemas.Deployment] = {}
+_next_id: int = 1
 
 
-@router.post("/", response_model=Deployment, status_code=201)
-def create_deployment(payload: DeploymentCreate):
-    global next_id
+def list_deployments() -> List[schemas.Deployment]:
+    return list(_deployments.values())
 
-    deployment = Deployment(
-        id=next_id,
+
+def create_deployment(payload: schemas.DeploymentCreate) -> schemas.Deployment:
+    global _next_id
+
+    deployment = schemas.Deployment(
+        id=_next_id,
         name=payload.name,
-        version=payload.version,
         environment=payload.environment,
-        created_at=datetime.now()
+        version=payload.version,
     )
-    deployments[next_id] = deployment
-    next_id += 1
+    _deployments[_next_id] = deployment
+    _next_id += 1
     return deployment
 
 
-@router.get("/{deployment_id}", response_model=Deployment)
-def get_deployment(deployment_id: int):
-    if deployment_id not in deployments:
-        raise HTTPException(status_code=404, detail="Deployment not found")
-    return deployments[deployment_id]
+def get_deployment(deployment_id: int) -> schemas.Deployment:
+    deployment = _deployments.get(deployment_id)
+    if deployment is None:
+        raise DeploymentNotFoundError(deployment_id)
+    return deployment
 
 
-@router.put("/{deployment_id}", response_model=Deployment)
-def update_deployment(deployment_id: int, payload: DeploymentUpdate):
-    if deployment_id not in deployments:
-        raise HTTPException(status_code=404, detail="Deployment not found")
+def update_deployment(
+    deployment_id: int,
+    payload: schemas.DeploymentUpdate,
+) -> schemas.Deployment:
+    if deployment_id not in _deployments:
+        raise DeploymentNotFoundError(deployment_id)
 
-    stored = deployments[deployment_id]
-    updated = stored.copy(update=payload.dict(exclude_unset=True))
-    deployments[deployment_id] = updated
+    existing = _deployments[deployment_id]
+    updated_data = existing.model_dump()
+
+    # Only overwrite fields that were provided
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        updated_data[field] = value
+
+    updated = schemas.Deployment(**updated_data)
+    _deployments[deployment_id] = updated
     return updated
 
 
-@router.delete("/{deployment_id}", status_code=204)
-def delete_deployment(deployment_id: int):
-    if deployment_id not in deployments:
-        raise HTTPException(status_code=404, detail="Deployment not found")
+def delete_deployment(deployment_id: int) -> None:
+    if deployment_id not in _deployments:
+        raise DeploymentNotFoundError(deployment_id)
 
-    del deployments[deployment_id]
-    return None
+    del _deployments[deployment_id]
