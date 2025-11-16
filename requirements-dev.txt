@@ -1,0 +1,4 @@
+# requirements-dev.txt
+ruff
+pre-commit
+pytest
