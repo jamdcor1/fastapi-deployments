@@ -1,10 +1,13 @@
 # app/main.py
+
 import logging
 from typing import List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 
 from . import deployments, schemas
+from .exceptions import DeploymentNotFoundError
 
 # -----------------------------
 # Logging configuration
@@ -25,6 +28,32 @@ app = FastAPI(
 )
 
 
+# -----------------------------
+# Exception handlers
+# -----------------------------
+@app.exception_handler(DeploymentNotFoundError)
+async def deployment_not_found_handler(
+    request: Request,
+    exc: DeploymentNotFoundError,
+) -> JSONResponse:
+    logger.warning(
+        "Deployment not found: id=%s path=%s",
+        exc.deployment_id,
+        request.url.path,
+    )
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": f"Deployment {exc.deployment_id} not found"},
+    )
+
+
+# (Optional later) You could add more handlers here, e.g. for validation errors
+# or for your own other domain exceptions.
+
+
+# -----------------------------
+# Routes
+# -----------------------------
 @app.get("/healthz")
 def healthz() -> dict:
     logger.debug("Health check requested")
@@ -42,9 +71,10 @@ def list_deployments() -> List[schemas.Deployment]:
 @app.post("/deployments", response_model=schemas.Deployment, status_code=201)
 def create_deployment(payload: schemas.DeploymentCreate) -> schemas.Deployment:
     logger.info(
-        "Creating deployment: name=%s, environment=%s",
+        "Creating deployment: name=%s, environment=%s, version=%s",
         payload.name,
         payload.environment,
+        payload.version,
     )
     deployment = deployments.create_deployment(payload)
     logger.info("Created deployment id=%s", deployment.id)
@@ -55,9 +85,7 @@ def create_deployment(payload: schemas.DeploymentCreate) -> schemas.Deployment:
 def get_deployment(deployment_id: int) -> schemas.Deployment:
     logger.info("Fetching deployment id=%s", deployment_id)
     deployment = deployments.get_deployment(deployment_id)
-    if deployment is None:
-        logger.warning("Deployment not found id=%s", deployment_id)
-        raise HTTPException(status_code=404, detail="Deployment not found")
+    logger.info("Fetched deployment id=%s", deployment_id)
     return deployment
 
 
@@ -68,9 +96,6 @@ def update_deployment(
 ) -> schemas.Deployment:
     logger.info("Updating deployment id=%s", deployment_id)
     updated = deployments.update_deployment(deployment_id, payload)
-    if updated is None:
-        logger.warning("Attempted update on missing deployment id=%s", deployment_id)
-        raise HTTPException(status_code=404, detail="Deployment not found")
     logger.info("Updated deployment id=%s", deployment_id)
     return updated
 
@@ -78,8 +103,5 @@ def update_deployment(
 @app.delete("/deployments/{deployment_id}", status_code=204)
 def delete_deployment(deployment_id: int) -> None:
     logger.info("Deleting deployment id=%s", deployment_id)
-    deleted = deployments.delete_deployment(deployment_id)
-    if not deleted:
-        logger.warning("Attempted delete on missing deployment id=%s", deployment_id)
-        raise HTTPException(status_code=404, detail="Deployment not found")
+    deployments.delete_deployment(deployment_id)
     logger.info("Deleted deployment id=%s", deployment_id)
