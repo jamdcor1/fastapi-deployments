@@ -7,23 +7,31 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from . import deployments, schemas
+from .config import settings
 from .exceptions import DeploymentNotFoundError
 
 # -----------------------------
 # Logging configuration
 # -----------------------------
 logging.basicConfig(
-    level=logging.INFO,
+    level=settings.log_level.upper(),  # e.g. "INFO" / "DEBUG"
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
 )
 
 logger = logging.getLogger("deployments_app")
 
+logger.info(
+    "Starting app '%s' in environment '%s' with log level '%s'",
+    settings.app_name,
+    settings.environment,
+    settings.log_level.upper(),
+)
+
 # -----------------------------
 # FastAPI app
 # -----------------------------
 app = FastAPI(
-    title="FastAPI Deployments App",
+    title=settings.app_name,
     version="0.1.0",
 )
 
@@ -47,17 +55,13 @@ async def deployment_not_found_handler(
     )
 
 
-# (Optional later) You could add more handlers here, e.g. for validation errors
-# or for your own other domain exceptions.
-
-
 # -----------------------------
 # Routes
 # -----------------------------
 @app.get("/healthz")
 def healthz() -> dict:
     logger.debug("Health check requested")
-    return {"status": "ok"}
+    return {"status": "ok", "environment": settings.environment}
 
 
 @app.get("/deployments", response_model=List[schemas.Deployment])
