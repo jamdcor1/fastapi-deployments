@@ -21,7 +21,7 @@ def create_deployment(payload: schemas.DeploymentCreate) -> schemas.Deployment:
         name=payload.name,
         environment=payload.environment,
         version=payload.version,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(),
     )
     _deployments[_next_id] = deployment
     _next_id += 1
