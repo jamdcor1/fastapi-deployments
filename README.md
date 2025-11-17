@@ -1,180 +1,220 @@
-📦 FastAPI Deployments App
+# FastAPI Deployments App
 
-A small FastAPI application built as part of a DevOps learning roadmap.
-This project grows through multiple phases—starting local-only, then adding best practices, a real database, containers, CI/CD, cloud deployment, and observability.
+A small FastAPI application built as part of a multi-phase DevOps learning roadmap.  
+The project begins as a simple local FastAPI service (Phase 0) and evolves through industry-standard DevOps practices including linting, formatting, configuration, testing, databases, containers, CI/CD, cloud deployment, and observability.
 
-This README reflects the project as of the end of Phase 1.
+This README reflects the project **as of the completion of Phase 1**.
 
-🚀 Project Overview
+---
 
-This app provides a simple API to track “deployments” using in-memory storage (for now).
-It includes:
+## Overview
 
-/healthz endpoint
+This application provides:
 
-Full CRUD for deployments
+- `/healthz` – health check endpoint  
+- `/deployments` – CRUD API for deployments  
+- Automatic API docs via Swagger (`/docs`) and ReDoc (`/redoc`)  
+- A pytest test suite  
+- In-memory storage (database integration begins in Phase 2)
 
-Pydantic models
+Phase 1 also introduced:
 
-Automated FastAPI docs (/docs & /redoc)
+- Ruff linting and formatting  
+- Pre-commit hooks  
+- Structured logging  
+- Centralized exception handling  
+- Environment-based configuration using Pydantic Settings  
 
-Test suite with pytest
+---
 
-Development best practices (linting, logging, config, exception handling)
+## Project Structure
 
-This forms the foundation for deeper DevOps concepts introduced in later phases.
-
-📁 Project Structure
 fastapi-deployments/
 │
 ├── app/
-│   ├── main.py               # FastAPI app, routes, logging, exception handlers
-│   ├── deployments.py        # In-memory deployment store + CRUD logic
-│   ├── schemas.py            # Pydantic models
-│   ├── exceptions.py         # Custom exception types
-│   └── config.py             # Pydantic Settings loaded from .env
+│ ├── main.py # FastAPI app, routes, logging, exception handlers
+│ ├── deployments.py # In-memory deployment store + CRUD logic
+│ ├── schemas.py # Pydantic models
+│ ├── exceptions.py # Custom exception classes
+│ └── config.py # Environment-based configuration (Pydantic Settings)
 │
 ├── tests/
-│   └── test_deployments.py   # Full test suite for API endpoints
+│ └── test_deployments.py # Test suite for API endpoints
 │
-├── requirements.txt          # Runtime dependencies
-├── requirements-dev.txt      # Ruff, pre-commit, pytest (development only)
-├── .pre-commit-config.yaml   # Linting/formatting hooks
+├── requirements.txt # Runtime dependencies
+├── requirements-dev.txt # Development tools (ruff, pre-commit, pytest)
+├── .pre-commit-config.yaml # Pre-commit hook definitions
 ├── .gitignore
-├── .env.example              # Example environment variables
-└── README.md                 # You're reading it!
+├── .env.example # Sample environment variable file
+└── README.md
 
-🧪 Running the Application
-1. Create virtual environment & install dependencies
+
+---
+
+## Setup Instructions
+
+### 1. Create a virtual environment
+
 python -m venv .venv
-source .venv/bin/activate     # or .venv\Scripts\activate on Windows
+
+
+
+Activate it:
+
+**Windows:**
+.venv\Scripts\activate
+
+
+
+**macOS/Linux:**
+source .venv/bin/activate
+
+
+---
+
+### 2. Install dependencies
 
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 
-2. Create a local .env
+
+---
+
+### 3. Create your `.env` file
+
+Copy the example:
+
 cp .env.example .env
 
 
-Modify values as needed:
+
+Edit values as needed:
 
 APP_NAME=FastAPI Deployments
+
 ENVIRONMENT=local
+
 LOG_LEVEL=INFO
 
-3. Start the API
+
+---
+
+### 4. Start the API
+
 uvicorn app.main:app --reload
 
 
 Visit:
 
-Swagger UI → http://localhost:8000/docs
+- Swagger UI → http://localhost:8000/docs  
+- ReDoc → http://localhost:8000/redoc  
 
-ReDoc → http://localhost:8000/redoc
+---
 
-🧪 Running the Tests
+## Running Tests
+
+Tests use pytest and FastAPI’s TestClient.
+
 pytest
 
 
-All tests should pass:
+
+Expected:
 
 6 passed in X.XXs
 
-🧹 Development Workflow (Phase 1 Practices)
-✔ Ruff Linting
 
-Check:
+---
+
+## Development Workflow (Phase 1 Practices)
+
+### Ruff Linting
 
 ruff check .
+
 
 
 Auto-fix:
 
 ruff check . --fix
 
-✔ Ruff Formatting
+
+
+### Ruff Formatting
+
 ruff format .
 
-✔ Pre-commit Hooks
 
-Install:
+
+### Pre-commit Hooks
+
+Install and enable:
 
 pre-commit install
 
 
-Now every commit automatically:
+From now on, every commit will:
 
-Formats code
+- Format code  
+- Lint code  
+- Fail if issues are detected  
 
-Lints code
+---
 
-Rejects violations
+## Phase 0 Features (Completed)
 
-📝 Features Implemented (End of Phase 1)
-✔ Phase 0 — Core Local App
+- FastAPI app scaffold  
+- `/healthz` endpoint  
+- CRUD endpoints for deployments  
+- In-memory storage  
+- Pydantic schemas  
+- Interactive API docs  
+- Full pytest test suite  
+- Local development with Uvicorn  
 
-FastAPI project structure
+---
 
-CRUD endpoints for deployments
+## Phase 1 Features (Completed)
 
-In-memory data store
+- Linting using Ruff  
+- Formatting using Ruff  
+- Pre-commit automation  
+- Logging added to all endpoints  
+- Centralized exception handling  
+- Pydantic Settings for environment variables  
+- `.env.example` configuration baseline  
+- Improved `.gitignore`  
+- 100% passing test suite  
 
-Pydantic models (v2 style)
+---
 
-Automated tests
+## Next Phase: Phase 2 – Real Database Integration
 
-Interactive docs
+Phase 2 will introduce:
 
-Runs locally with Uvicorn
+- SQLModel or SQLAlchemy ORM  
+- SQLite for local dev  
+- Postgres for production/cloud  
+- Alembic migrations  
+- Database URL config via environment variables  
+- CRUD rewritten to use the database instead of in-memory storage  
 
-✔ Phase 1 — Development Best Practices
+---
 
-Ruff linting + formatting
+## Purpose of This Repository
 
-Pre-commit hooks
+This project is part of a long-term DevOps learning roadmap, designed to teach:
 
-Logging added to all routes
+- Python application development  
+- API design and structure  
+- Code quality and linting  
+- Testing best practices  
+- Configuration management  
+- Containerization (Docker)  
+- CI/CD automation (GitHub Actions)  
+- Cloud deployment  
+- Observability and monitoring  
 
-Centralized exception handling
+Each phase brings this application closer to real-world production standards.
 
-Configuration via environment variables (Pydantic Settings)
-
-.env.example and .gitignore improvements
-
-Full test suite passing
-
-🔮 Next Phase: Phase 2 — Real Database (SQLite → Postgres)
-
-In Phase 2 we will:
-
-Add SQLModel or SQLAlchemy
-
-Create Deployment database models
-
-Replace in-memory storage
-
-Add Alembic migrations
-
-Use SQLite locally
-
-Add environment-based database URLs
-
-Prepare for Postgres in containers and cloud
-
-📌 About This Project
-
-This repository is part of a multi-phase DevOps learning roadmap designed to simulate:
-
-software development
-
-backend engineering
-
-containerization
-
-CI/CD automation
-
-cloud deployment
-
-observability
-
-At each phase, the project evolves toward production-readiness.
+---
