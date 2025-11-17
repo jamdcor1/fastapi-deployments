@@ -23,5 +23,5 @@ class Deployment(DeploymentBase):
     id: int
     created_at: datetime
 
-    class Config:
+    class ConfigDict:
         orm_mode = True
