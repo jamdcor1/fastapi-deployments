@@ -3,12 +3,14 @@
 import logging
 from typing import List
 
-from fastapi import FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
-from . import deployments, schemas
-from .config import settings
-from .exceptions import DeploymentNotFoundError
+from app import deployments, schemas
+from app.config import settings
+from app.db import Base, engine, get_db
+from app.exceptions import DeploymentNotFoundError
 
 # -----------------------------
 # Logging configuration
@@ -26,6 +28,13 @@ logger.info(
     settings.environment,
     settings.log_level.upper(),
 )
+
+
+# -----------------------------
+# Once Alembic is in place, you can remove this.
+# -----------------------------
+Base.metadata.create_all(bind=engine)
+
 
 # -----------------------------
 # FastAPI app
@@ -67,30 +76,30 @@ def healthz() -> dict:
 
 
 @app.get("/deployments", response_model=List[schemas.Deployment])
-def list_deployments() -> List[schemas.Deployment]:
+def list_deployments(db: Session = Depends(get_db)):
     logger.info("Listing deployments")
-    items = deployments.list_deployments()
+    items = deployments.list_deployments(db)
     logger.info("Found %s deployments", len(items))
     return items
 
 
 @app.post("/deployments", response_model=schemas.Deployment, status_code=201)
-def create_deployment(payload: schemas.DeploymentCreate) -> schemas.Deployment:
+def create_deployment(payload: schemas.DeploymentCreate, db: Session = Depends(get_db)):
     logger.info(
         "Creating deployment: name=%s, environment=%s, version=%s",
         payload.name,
         payload.environment,
         payload.version,
     )
-    deployment = deployments.create_deployment(payload)
+    deployment = deployments.create_deployment(db, payload)
     logger.info("Created deployment id=%s", deployment.id)
     return deployment
 
 
 @app.get("/deployments/{deployment_id}", response_model=schemas.Deployment)
-def get_deployment(deployment_id: int) -> schemas.Deployment:
+def get_deployment(deployment_id: int, db: Session = Depends(get_db)):
     logger.info("Fetching deployment id=%s", deployment_id)
-    deployment = deployments.get_deployment(deployment_id)
+    deployment = deployments.get_deployment(db, deployment_id)
     if deployment is None:
         raise DeploymentNotFoundError(deployment_id)
     logger.info("Fetched deployment id=%s", deployment_id)
@@ -101,9 +110,10 @@ def get_deployment(deployment_id: int) -> schemas.Deployment:
 def update_deployment(
     deployment_id: int,
     payload: schemas.DeploymentUpdate,
-) -> schemas.Deployment:
+    db: Session = Depends(get_db),
+):
     logger.info("Updating deployment id=%s", deployment_id)
-    updated = deployments.update_deployment(deployment_id, payload)
+    updated = deployments.update_deployment(db, deployment_id, payload)
     if updated is None:
         raise DeploymentNotFoundError(deployment_id)
     logger.info("Updated deployment id=%s", deployment_id)
@@ -111,9 +121,11 @@ def update_deployment(
 
 
 @app.delete("/deployments/{deployment_id}", status_code=204)
-def delete_deployment(deployment_id: int) -> None:
+def delete_deployment(
+    deployment_id: int, request: Request, db: Session = Depends(get_db)
+) -> None:
     logger.info("Deleting deployment id=%s", deployment_id)
-    deleted = deployments.delete_deployment(deployment_id)
+    deleted = deployments.delete_deployment(db, deployment_id)
     if not deleted:
         raise DeploymentNotFoundError(deployment_id)
     logger.info("Deleted deployment id=%s", deployment_id)

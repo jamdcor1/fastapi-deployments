@@ -1,57 +1,63 @@
 # app/deployments.py
-from typing import Dict, List, Optional
+from typing import Sequence
 
-from datetime import datetime
+from fastapi import HTTPException, status
+from sqlalchemy import select, delete as sqla_delete
+from sqlalchemy.orm import Session
 
-from . import schemas
-
-_deployments: Dict[int, schemas.Deployment] = {}
-_next_id: int = 1
-
-
-def list_deployments() -> List[schemas.Deployment]:
-    return list(_deployments.values())
+from app import schemas
+from app.models import Deployment
 
 
-def create_deployment(payload: schemas.DeploymentCreate) -> schemas.Deployment:
-    global _next_id
+def list_deployments(db: Session) -> Sequence[Deployment]:
+    stmt = select(Deployment)
+    return db.scalars(stmt).all()
 
-    deployment = schemas.Deployment(
-        id=_next_id,
-        name=payload.name,
-        environment=payload.environment,
-        version=payload.version,
-        created_at=datetime.now(),
-    )
-    _deployments[_next_id] = deployment
-    _next_id += 1
+
+def get_deployment(db: Session, deployment_id: int) -> Deployment:
+    deployment = db.get(Deployment, deployment_id)
+    if deployment is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Deployment with id {deployment_id} not found",
+        )
     return deployment
 
 
-def get_deployment(deployment_id: int) -> Optional[schemas.Deployment]:
-    return _deployments.get(deployment_id)
+def create_deployment(db: Session, payload: schemas.DeploymentCreate) -> Deployment:
+    deployment = Deployment(
+        name=payload.name,
+        version=payload.version,
+        environment=payload.environment,
+    )
+    db.add(deployment)
+    db.commit()
+    db.refresh(deployment)
+    return deployment
 
 
 def update_deployment(
+    db: Session,
     deployment_id: int,
     payload: schemas.DeploymentUpdate,
-) -> Optional[schemas.Deployment]:
-    existing = _deployments.get(deployment_id)
-    if existing is None:
-        return None
+) -> Deployment:
+    deployment = get_deployment(db, deployment_id)
 
-    # Pydantic v2 style
-    updated_data = existing.model_dump()
-    update_data = payload.model_dump(exclude_unset=True)
-    updated_data.update(update_data)
+    if payload.name is not None:
+        deployment.name = payload.name
+    if payload.version is not None:
+        deployment.version = payload.version
+    if payload.environment is not None:
+        deployment.environment = payload.environment
 
-    updated = schemas.Deployment(**updated_data)
-    _deployments[deployment_id] = updated
-    return updated
+    db.commit()
+    db.refresh(deployment)
+    return deployment
 
 
-def delete_deployment(deployment_id: int) -> bool:
-    if deployment_id in _deployments:
-        del _deployments[deployment_id]
-        return True
-    return False
+def delete_deployment(db: Session, deployment_id: int) -> bool:
+    stmt = sqla_delete(Deployment).where(Deployment.id == deployment_id)
+    result = db.execute(stmt)
+    db.execute(stmt)
+    db.commit()
+    return result.rowcount > 0
