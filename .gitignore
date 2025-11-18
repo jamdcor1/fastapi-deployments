@@ -1,63 +1,100 @@
-# ----------------------
-# Python cache
-# ----------------------
+# ==============================================================================
+# PYTHON / VENV / COMPILED
+# ==============================================================================
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
 
 # Virtual environments
 .venv/
 venv/
 env/
+ENV/
 
-# Byte-compiled
-*.pyc
+# Python distribution metadata
+*.egg-info/
+pip-wheel-metadata/
+site-packages/
 
-# ----------------------
-# Environment / secrets
-# ----------------------
+# Pickle files
+*.pkl
+
+# ==============================================================================
+# ENVIRONMENT VARIABLES / LOCAL CONFIG / SECRETS
+# ==============================================================================
+# Ignore local environment files
 .env
 .env.*
+# Allow example/template environment files
 !*.env.example
+!env.template
 
-# Pydantic settings or config files
-*.sqlite
+# ==============================================================================
+# DATABASE / LOCAL DATA STORAGE
+# ==============================================================================
+data/
 *.db
+*.sqlite
+*.sqlite3
 
-# ----------------------
-# Tool-specific
-# ----------------------
+# ==============================================================================
+# TOOL-SPECIFIC CACHES AND TEMP FILES
+# ==============================================================================
 
-# Ruff cache
+# Ruff
 .ruff_cache/
 
-# Pre-commit
-.pre-commit-config.yaml  # <-- KEEP this one in repo
-.pre-commit-hooks.yaml
-# NOTE: Do NOT ignore `.pre-commit-config.yaml`
-# Just leave the cache below ignored
-
-# Pre-commit cache
+# Pre-commit cache (KEEP the config!)
 .pre-commit/
+# DO NOT ignore the config file:
+# .pre-commit-config.yaml should be tracked
 
-# Coverage (pytest)
-.coverage
-htmlcov/
+# Pytest / Coverage
+.pytest_cache/
 .cache/
+.coverage
+coverage.xml
+htmlcov/
 
-# ----------------------
-# Editor / IDE files
-# ----------------------
+# MyPy
+.mypy_cache/
+
+# Uvicorn reload artifact
+.pyre/
+
+# ==============================================================================
+# ALEMBIC (Migration cache, keep migration scripts)
+# ==============================================================================
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# ==============================================================================
+# LOGS / RUNTIME OUTPUT / BUILD ARTIFACTS
+# ==============================================================================
+*.log
+logs/
+*.pid
+dist/
+build/
+
+# ==============================================================================
+# EDITOR / IDE FILES
+# ==============================================================================
 .vscode/
 .idea/
 *.swp
 
-# ----------------------
-# Docker / Build Artifacts
-# ----------------------
-*.log
+# ==============================================================================
+# DOCKER
+# ==============================================================================
+# (You will add more in Phase 3)
 *.pid
-dist/
-build/
-*.egg-info/
+*.tar
+
+# ==============================================================================
+# OS FILES
+# ==============================================================================
+.DS_Store
+Thumbs.db
