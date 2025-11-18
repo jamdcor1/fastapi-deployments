@@ -4,3 +4,6 @@ pydantic
 pytest
 httpx
 pydantic-settings>=2.0.0
+SQLAlchemy>=2.0
+alembic>=1.13
+psycopg[binary]>=3.1  # for Postgres later, safe to install now
